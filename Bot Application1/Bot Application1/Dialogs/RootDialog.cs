@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Bot_Application1.ExternalApiService.Luis;
+using Bot_Application1.ExternalApiService.Fixer;
 
 namespace Bot_Application1.Dialogs
 {
@@ -11,7 +13,9 @@ namespace Bot_Application1.Dialogs
     {
         protected string id { get; set; }
         protected string command { get; set; }
-
+        protected string currency { get; set; }
+        protected decimal exchangeRate { get; set; }
+       
         public Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
@@ -45,9 +49,20 @@ namespace Bot_Application1.Dialogs
         {
             this.command = (await argument).Text;
             var response = LuisApiService.GetLuisResponse(command);
+            var entities = response.Entities;
+            //var currencies = entities.Select(s => s.Entity.ToUpper()).ToList();
+            var currency = entities.OrderBy(e => e.Score).LastOrDefault()?.Entity.ToUpper();
+            var exchangeRateResponse = ExchangeRateApiService.GetExchangeRateResponse(currency);
+            var exchangeRate = exchangeRateResponse.Rates[currency];
+                
+
             if (response.TopScoringIntent.Intent == "None")
             {
-                await context.PostAsync($"Hey man, wrong command, try something else :)");
+                await context.PostAsync($"Invalid request, please enter valid requests");
+            }
+            else
+            {
+                await context.PostAsync($"1 NZD is equal to {exchangeRate} {currency}");
             }
         }
     }
