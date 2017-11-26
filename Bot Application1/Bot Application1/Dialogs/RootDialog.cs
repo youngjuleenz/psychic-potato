@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using Bot_Application1.ExternalApiService.Luis;
 
 namespace Bot_Application1.Dialogs
 {
@@ -9,6 +10,7 @@ namespace Bot_Application1.Dialogs
     public class RootDialog : IDialog<object>
     {
         protected string id { get; set; }
+        protected string command { get; set; }
 
         public Task StartAsync(IDialogContext context)
         {
@@ -34,8 +36,19 @@ namespace Bot_Application1.Dialogs
 
         public async Task IdReceived(IDialogContext context, IAwaitable<IMessageActivity> argument)
         {
-            this.id = (await argument).Text; 
+            this.id = (await argument).Text;
             await context.PostAsync($"Hello {id}, How can I help you? 1. Exchange rates 2. Stock prices");
+            context.Wait(ExecuteCommand);
+        }
+
+        public async Task ExecuteCommand(IDialogContext context, IAwaitable<IMessageActivity> argument)
+        {
+            this.command = (await argument).Text;
+            var response = LuisApiService.GetLuisResponse(command);
+            if (response.TopScoringIntent.Intent == "None")
+            {
+                await context.PostAsync($"Hey man, wrong command, try something else :)");
+            }
         }
     }
 }
