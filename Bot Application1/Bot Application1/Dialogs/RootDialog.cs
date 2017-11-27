@@ -5,6 +5,8 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Bot_Application1.ExternalApiService.Luis;
 using Bot_Application1.ExternalApiService.Fixer;
+using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace Bot_Application1.Dialogs
 {
@@ -15,6 +17,7 @@ namespace Bot_Application1.Dialogs
         protected string command { get; set; }
         protected string currency { get; set; }
         protected decimal exchangeRate { get; set; }
+        protected string symbol { get; set; }
        
         public Task StartAsync(IDialogContext context)
         {
@@ -50,20 +53,41 @@ namespace Bot_Application1.Dialogs
             this.command = (await argument).Text;
             var response = LuisApiService.GetLuisResponse(command);
             var entities = response.Entities;
+            //var symbol = response.
             //var currencies = entities.Select(s => s.Entity.ToUpper()).ToList();
-            var currency = entities.OrderBy(e => e.Score).LastOrDefault()?.Entity.ToUpper();
-            var exchangeRateResponse = ExchangeRateApiService.GetExchangeRateResponse(currency);
-            var exchangeRate = exchangeRateResponse.Rates[currency];
-                
 
             if (response.TopScoringIntent.Intent == "None")
             {
-                await context.PostAsync($"Invalid request, please enter valid requests");
+                await context.PostAsync("Invalid request, please enter a valid request");
             }
-            else
+            else if (response.TopScoringIntent.Intent == "GetExchangeRate")
             {
-                await context.PostAsync($"1 NZD is equal to {exchangeRate} {currency}");
+                var currency = entities.OrderBy(e => e.Score).LastOrDefault()?.Entity.ToUpper();
+                var exchangeRateResponse = ExchangeRateApiService.GetExchangeRateResponse(currency);
+                var exchangeRate = exchangeRateResponse.Rates[currency];
+
+                await context.PostAsync($"1 NZD is equal to {exchangeRate} {currency}");    
             }
+            else if (response.TopScoringIntent.Intent == "GetStockPrice")
+            {
+                var symbol = entities.OrderBy(e => e.Score).LastOrDefault()?.Entity.ToUpper();
+                var stockPriceResponse = StockPricesApiService.GetStockPricesResponse(symbol);
+                var jObj = JObject.Parse(stockPriceResponse);
+                var metadata = jObj["Meta Data"].ToObject<Dictionary<string, string>>();
+                var timeseries = jObj["Time Series (1min)"].ToObject<Dictionary<string, Dictionary<string, string>>>();
+                var latestUpdateKey = timeseries.Keys.First();
+                var latestUpdate = timeseries[latestUpdateKey];
+
+                var closingValue = latestUpdate["4. close"];
+
+
+                //var stockPrice = stockPriceResponse.Timeseries[Close];
+                
+          
+                await context.PostAsync($"Stock price of {symbol} is {closingValue} USD");
+            }
+
+            
         }
     }
 }
