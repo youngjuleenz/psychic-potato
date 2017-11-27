@@ -116,6 +116,8 @@
     <Compile Include="Dialogs\RootDialog.cs" />
     <Compile Include="ExternalApiService\Fixer\ExchangeRateApiService.cs" />
     <Compile Include="ExternalApiService\Fixer\ExchangeRateResponse.cs" />
+    <Compile Include="ExternalApiService\Fixer\StockPricesApiService.cs" />
+    <Compile Include="ExternalApiService\Fixer\StockPricesResponse.cs" />
     <Compile Include="ExternalApiService\Luis\LuisApiService.cs" />
     <Compile Include="ExternalApiService\Luis\LuisResponse.cs" />
     <Compile Include="Global.asax.cs">
