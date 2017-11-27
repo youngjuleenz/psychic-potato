@@ -75,37 +75,19 @@ namespace Bot_Application1.Dialogs
                 var jObj = JObject.Parse(stockPriceResponse);
                 var metadata = jObj["Meta Data"].ToObject<Dictionary<string, string>>();
                 var timeseries = jObj["Time Series (1min)"].ToObject<Dictionary<string, Dictionary<string, string>>>();
-                
+                var latestUpdateKey = timeseries.Keys.First();
+                var latestUpdate = timeseries[latestUpdateKey];
+
+                var closingValue = latestUpdate["4. close"];
 
 
-
-                //var Close = "Close";
                 //var stockPrice = stockPriceResponse.Timeseries[Close];
                 
-
-               // await context.PostAsync($"Stock price of {symbol} is {stockPrice}");
+          
+                await context.PostAsync($"Stock price of {symbol} is {closingValue} USD");
             }
 
-            //var currency = entities.OrderBy(e => e.Score).LastOrDefault()?.Entity.ToUpper();
-            //var exchangeRateResponse = ExchangeRateApiService.GetExchangeRateResponse(currency);
-            //var exchangeRate = exchangeRateResponse.Rates[currency];
-
-            //var stockPricesResponse = StockPricesApiService.GetStockPricesResponse(symbol);
-            //var stockprice = stockPricesResponse.Timeseries[symbol];
-
-
-            //if (response.TopScoringIntent.Intent == "None")
-            //{
-            //    await context.PostAsync($"Invalid request, please enter valid requests");
-            //}
-            //else if (response.TopScoringIntent.Intent == "GetExchangeRate")
-            //{
-            //    await context.PostAsync($"1 NZD is equal to {exchangeRate} {currency}");
-            //}
-            //else if (response.TopScoringIntent.Intent == "GetStockPrice")
-            //{
-            //    await context.PostAsync($"Stock price of {symbol} is {stockprice}");
-            //}
+            
         }
     }
 }
