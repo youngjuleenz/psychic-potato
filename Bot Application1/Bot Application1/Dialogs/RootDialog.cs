@@ -64,27 +64,41 @@ namespace Bot_Application1.Dialogs
             {
                 var currency = entities.OrderBy(e => e.Score).LastOrDefault()?.Entity.ToUpper();
                 var exchangeRateResponse = ExchangeRateApiService.GetExchangeRateResponse(currency);
-                var exchangeRate = exchangeRateResponse.Rates[currency];
+                if (exchangeRateResponse.Rates.Count == 0)
+                {
+                    await context.PostAsync($"That is not a valid type of currency!! Please try again.");
+                } else
+                {
+                    var exchangeRate = exchangeRateResponse.Rates[currency];
 
-                await context.PostAsync($"1 NZD is equal to {exchangeRate} {currency}");    
+                    await context.PostAsync($"1 NZD is equal to {exchangeRate} {currency}");
+                } 
             }
             else if (response.TopScoringIntent.Intent == "GetStockPrice")
             {
                 var symbol = entities.OrderBy(e => e.Score).LastOrDefault()?.Entity.ToUpper();
                 var stockPriceResponse = StockPricesApiService.GetStockPricesResponse(symbol);
-                var jObj = JObject.Parse(stockPriceResponse);
-                var metadata = jObj["Meta Data"].ToObject<Dictionary<string, string>>();
-                var timeseries = jObj["Time Series (1min)"].ToObject<Dictionary<string, Dictionary<string, string>>>();
-                var latestUpdateKey = timeseries.Keys.First();
-                var latestUpdate = timeseries[latestUpdateKey];
+                if (stockPriceResponse.Contains("Invalid API call"))
+                {
+                    await context.PostAsync("Invalid stock price symbol. Please try again.");
+                } else
+                {
+                    var jObj = JObject.Parse(stockPriceResponse);
+                    var metadata = jObj["Meta Data"].ToObject<Dictionary<string, string>>();
+                    var timeseries = jObj["Time Series (1min)"].ToObject<Dictionary<string, Dictionary<string, string>>>();
+                    var latestUpdateKey = timeseries.Keys.First();
+                    var latestUpdate = timeseries[latestUpdateKey];
+                    var closingValue = latestUpdate["4. close"];
 
-                var closingValue = latestUpdate["4. close"];
+                    await context.PostAsync($"Stock price of {symbol} is {closingValue} USD");
+                }
+
 
 
                 //var stockPrice = stockPriceResponse.Timeseries[Close];
                 
           
-                await context.PostAsync($"Stock price of {symbol} is {closingValue} USD");
+
             }
 
             
