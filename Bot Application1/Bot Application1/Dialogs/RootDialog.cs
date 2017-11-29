@@ -129,7 +129,7 @@ namespace Bot_Application1.Dialogs
                     await context.PostAsync($"Is there anything else I can help you with? 1. Exchange rates 2. Stock prices 3. Sign out");
                 }
             }
-            else if (response.TopScoringIntent.Intent == "Logout")
+            else if (response.TopScoringIntent.Intent == "SignOut")
             {
                 await context.PostAsync($"See you {currentUser.username}! Have a nice day :)");
                 context.Wait(MessageReceivedAsync);
