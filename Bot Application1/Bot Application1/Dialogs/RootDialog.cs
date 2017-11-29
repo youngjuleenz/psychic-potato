@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Bot_Application1.ExternalApiService.Luis;
 using Bot_Application1.ExternalApiService.Fixer;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
+
 
 namespace Bot_Application1.Dialogs
 {
@@ -18,7 +21,8 @@ namespace Bot_Application1.Dialogs
         protected string currency { get; set; }
         protected decimal exchangeRate { get; set; }
         protected string symbol { get; set; }
-       
+        private YoungJusBankBotModel currentUser { get; set; }
+
         public Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
@@ -30,20 +34,34 @@ namespace Bot_Application1.Dialogs
         {
             await context.PostAsync("Welcome to Contoso Bank, what is your ID?");
             context.Wait(IdReceived);
-            //var activity = await result as Activity;
 
-            // calculate something for us to return
-            //int length = (activity.Text ?? string.Empty).Length;
-
-            // return our reply to the user
-            //await context.PostAsync($"You sent {activity.Text} which was {length} characters");
-
-            //context.Wait(MessageReceivedAsync);
         }
 
         public async Task IdReceived(IDialogContext context, IAwaitable<IMessageActivity> argument)
         {
             this.id = (await argument).Text;
+
+            List<YoungJusBankBotModel> users = await AzureManager.AzureManagerInstance.GetUserInformation();
+            if (users.Count > 0)
+            {
+                foreach (YoungJusBankBotModel username in users)
+                {
+                    if (id.Equals(id, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        this.currentUser = username;
+                        break;
+                    }
+                    else
+                    {
+                        await context.PostAsync("Invalid username. Please try again");
+                    }
+                }
+
+            }
+
+
+
+
             await context.PostAsync($"Hello {id}, How can I help you? 1. Exchange rates 2. Stock prices");
             context.Wait(ExecuteCommand);
         }
@@ -93,9 +111,6 @@ namespace Bot_Application1.Dialogs
                     await context.PostAsync($"Stock price of {symbol} is {closingValue} USD");
                 }
 
-
-
-                //var stockPrice = stockPriceResponse.Timeseries[Close];
                 
           
 
