@@ -15,12 +15,12 @@ namespace Bot_Application1.Dialogs
     [Serializable]
     public class RootDialog : IDialog<object>
     {
-        protected string id { get; set; }
-        protected string pw { get; set; }
-        protected string command { get; set; }
-        protected string currency { get; set; }
-        protected decimal exchangeRate { get; set; }
-        protected string symbol { get; set; }
+        private string id { get; set; }
+        private string pw { get; set; }
+        private string command { get; set; }
+        private string currency { get; set; }
+        private decimal exchangeRate { get; set; }
+        private string symbol { get; set; }
         private UserInformation currentUser { get; set; }
 
         public Task StartAsync(IDialogContext context)
