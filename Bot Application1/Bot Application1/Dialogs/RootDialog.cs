@@ -65,7 +65,7 @@ namespace Bot_Application1.Dialogs
             }
             else
             {
-                await context.PostAsync($"Hello {currentUser.username}, How can I help you? 1. Exchange rates 2. Stock prices");
+                await context.PostAsync($"Hello {currentUser.username}, How can I help you? 1. Exchange rates 2. Stock prices 3. Sign out");
                 context.Wait(ExecuteCommand);
             }
         }
@@ -82,7 +82,7 @@ namespace Bot_Application1.Dialogs
                     spellingFixedCommand = spellingFixedCommand
                         .Replace(token.Token, token.Suggestions.FirstOrDefault().Suggestion);
                 });
-                await context.PostAsync($"I'm going to guess you meant '{spellingFixedCommand}'!");
+                await context.PostAsync($"I'm going to guess you meant '{spellingFixedCommand}'! Hold on a second, let me get that for you!");
             }
 
             var response = LuisApiService.GetLuisResponse(spellingFixedCommand);
@@ -105,6 +105,7 @@ namespace Bot_Application1.Dialogs
                     var exchangeRate = exchangeRateResponse.Rates[currency];
 
                     await context.PostAsync($"1 NZD is equal to {exchangeRate} {currency}");
+                    await context.PostAsync($"Is there anything else I can help you with? 1. Exchange rates 2. Stock prices 3. Sign out");
                 }
             }
             else if (response.TopScoringIntent.Intent == "GetStockPrice")
@@ -125,10 +126,14 @@ namespace Bot_Application1.Dialogs
                     var closingValue = latestUpdate["4. close"];
 
                     await context.PostAsync($"Stock price of {symbol} is {closingValue} USD");
+                    await context.PostAsync($"Is there anything else I can help you with? 1. Exchange rates 2. Stock prices 3. Sign out");
                 }
             }
-
-
+            else if (response.TopScoringIntent.Intent == "Logout")
+            {
+                await context.PostAsync($"See you {currentUser.username}! Have a nice day :)");
+                context.Wait(MessageReceivedAsync);
+            }
         }
     }
 }
