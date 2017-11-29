@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Linq;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
@@ -17,11 +16,12 @@ namespace Bot_Application1.Dialogs
     public class RootDialog : IDialog<object>
     {
         protected string id { get; set; }
+        protected string pw { get; set; }
         protected string command { get; set; }
         protected string currency { get; set; }
         protected decimal exchangeRate { get; set; }
         protected string symbol { get; set; }
-        private YoungJusBankBotModel currentUser { get; set; }
+        private UserInformation currentUser { get; set; }
 
         public Task StartAsync(IDialogContext context)
         {
@@ -41,29 +41,35 @@ namespace Bot_Application1.Dialogs
         {
             this.id = (await argument).Text;
 
-            List<YoungJusBankBotModel> users = await AzureManager.AzureManagerInstance.GetUserInformation();
-            if (users.Count > 0)
+            var users = await AzureManager.AzureManagerInstance.GetUserInformation();
+            if (!users.Select(u => u.username).Contains(id))
             {
-                foreach (YoungJusBankBotModel username in users)
-                {
-                    if (id.Equals(id, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this.currentUser = username;
-                        break;
-                    }
-                    else
-                    {
-                        await context.PostAsync("Invalid username. Please try again");
-                    }
-                }
-
+                await context.PostAsync("Invalid username. Please try again");
             }
+            else
+            {
+                currentUser = users.FirstOrDefault(u => u.username == id);
+                await context.PostAsync("Please enter your password");
+                context.Wait(PasswordReceived);
+            }
+        }
 
 
 
-
-            await context.PostAsync($"Hello {id}, How can I help you? 1. Exchange rates 2. Stock prices");
-            context.Wait(ExecuteCommand);
+        public async Task PasswordReceived(IDialogContext context, IAwaitable<IMessageActivity> argument)
+        {
+            this.pw = (await argument).Text;
+            if (currentUser.password != pw)
+            {
+                currentUser = null;
+                await context.PostAsync($"Wrong password! Please try log in again by entering your Id.");
+                context.Wait(IdReceived);
+            }
+            else
+            {
+                await context.PostAsync($"Hello {currentUser.username}, How can I help you? 1. Exchange rates 2. Stock prices");
+                context.Wait(ExecuteCommand);
+            }
         }
 
         public async Task ExecuteCommand(IDialogContext context, IAwaitable<IMessageActivity> argument)
@@ -85,12 +91,13 @@ namespace Bot_Application1.Dialogs
                 if (exchangeRateResponse.Rates.Count == 0)
                 {
                     await context.PostAsync($"That is not a valid type of currency!! Please try again.");
-                } else
+                }
+                else
                 {
                     var exchangeRate = exchangeRateResponse.Rates[currency];
 
                     await context.PostAsync($"1 NZD is equal to {exchangeRate} {currency}");
-                } 
+                }
             }
             else if (response.TopScoringIntent.Intent == "GetStockPrice")
             {
@@ -99,7 +106,8 @@ namespace Bot_Application1.Dialogs
                 if (stockPriceResponse.Contains("Invalid API call"))
                 {
                     await context.PostAsync("Invalid stock price symbol. Please try again.");
-                } else
+                }
+                else
                 {
                     var jObj = JObject.Parse(stockPriceResponse);
                     var metadata = jObj["Meta Data"].ToObject<Dictionary<string, string>>();
@@ -110,13 +118,9 @@ namespace Bot_Application1.Dialogs
 
                     await context.PostAsync($"Stock price of {symbol} is {closingValue} USD");
                 }
-
-                
-          
-
             }
 
-            
+
         }
     }
 }

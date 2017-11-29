@@ -6,7 +6,8 @@ using System.Web;
 
 namespace Bot_Application1
 {
-    public class YoungJusBankBotModel
+    [Serializable]
+    public class UserInformation
     {
         [JsonProperty(PropertyName = "id")]
         public string id { get; set; }

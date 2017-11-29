@@ -12,12 +12,12 @@ namespace Bot_Application1
     {
         private static AzureManager instance;
         private MobileServiceClient client;
-        private IMobileServiceTable<YoungJusBankBotModel> userinformationTable;
+        private IMobileServiceTable<UserInformation> userinformationTable;
 
         private AzureManager()
         {
             this.client = new MobileServiceClient("http://youngjusbankbotmodel.azurewebsites.net");
-            this.userinformationTable = this.client.GetTable<YoungJusBankBotModel>();
+            this.userinformationTable = this.client.GetTable<UserInformation>();
         }
 
         public MobileServiceClient AzureClient
@@ -38,17 +38,17 @@ namespace Bot_Application1
             }
         }
 
-        public async Task<List<YoungJusBankBotModel>> GetUserInformation()
+        public async Task<List<UserInformation>> GetUserInformation()
         {
             return await this.userinformationTable.ToListAsync();
         }
 
-        public async Task AddUserInformation(YoungJusBankBotModel user)
+        public async Task AddUserInformation(UserInformation user)
         {
             await this.userinformationTable.InsertAsync(user);
         }
 
-        public async Task DeleteUserInformation(YoungJusBankBotModel user)
+        public async Task DeleteUserInformation(UserInformation user)
         {
             await this.userinformationTable.DeleteAsync(user);
         }
