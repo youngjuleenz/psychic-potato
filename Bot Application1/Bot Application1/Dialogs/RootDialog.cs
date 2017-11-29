@@ -131,6 +131,7 @@ namespace Bot_Application1.Dialogs
             }
             else if (response.TopScoringIntent.Intent == "SignOut")
             {
+                currentUser = null;
                 await context.PostAsync($"See you {currentUser.username}! Have a nice day :)");
                 context.Wait(MessageReceivedAsync);
             }
