@@ -8,7 +8,7 @@ using Microsoft.Bot.Connector;
 using Bot_Application1.ExternalApiService.Luis;
 using Bot_Application1.ExternalApiService.Fixer;
 using Newtonsoft.Json.Linq;
-
+using Bot_Application1.ExternalApiService.SpellCheck;
 
 namespace Bot_Application1.Dialogs
 {
@@ -54,8 +54,6 @@ namespace Bot_Application1.Dialogs
             }
         }
 
-
-
         public async Task PasswordReceived(IDialogContext context, IAwaitable<IMessageActivity> argument)
         {
             this.pw = (await argument).Text;
@@ -75,10 +73,20 @@ namespace Bot_Application1.Dialogs
         public async Task ExecuteCommand(IDialogContext context, IAwaitable<IMessageActivity> argument)
         {
             this.command = (await argument).Text;
-            var response = LuisApiService.GetLuisResponse(command);
+            string spellingFixedCommand = command;
+            var spellCheckResponse = SpellCheckApiService.GetSpellCheckApiResponse(command);
+            if (spellCheckResponse.FlaggedTokens.Any())
+            {
+                spellCheckResponse.FlaggedTokens.ForEach(token =>
+                {
+                    spellingFixedCommand = spellingFixedCommand
+                        .Replace(token.Token, token.Suggestions.FirstOrDefault().Suggestion);
+                });
+                await context.PostAsync($"I'm going to guess you meant '{spellingFixedCommand}'!");
+            }
+
+            var response = LuisApiService.GetLuisResponse(spellingFixedCommand);
             var entities = response.Entities;
-            //var symbol = response.
-            //var currencies = entities.Select(s => s.Entity.ToUpper()).ToList();
 
             if (response.TopScoringIntent.Intent == "None")
             {

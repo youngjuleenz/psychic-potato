@@ -124,6 +124,8 @@
     <Compile Include="ExternalApiService\Fixer\StockPricesResponse.cs" />
     <Compile Include="ExternalApiService\Luis\LuisApiService.cs" />
     <Compile Include="ExternalApiService\Luis\LuisResponse.cs" />
+    <Compile Include="ExternalApiService\SpellCheck\SpellCheckApiResponse.cs" />
+    <Compile Include="ExternalApiService\SpellCheck\SpellCheckApiService.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
